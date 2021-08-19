@@ -9,10 +9,6 @@ TGT_ACCESSKEY=${COSBU_TGT_ACCESSKEY}
 TGT_SECRETKEY=${COSBU_TGT_SECRETKEY}
 TGT_ENDPOINT=${COSBU_TGT_ENDPOINT}
 TGT_BUCKET=${COSBU_TGT_BUCKET}
-# constants for rclone on IBM COS
-TYPE=s3
-PROV==IBMCOS
-AUTH=env_auth=false
 
 setupS3() {
     echo "1. Setting up rclone config parameters"
@@ -60,10 +56,11 @@ checkS3() {
 }
 
 MODE=`echo ${1}|tr a-z A-Z`
-if [ "$1" != "sync" ] && [ "$1" != "check" ]; then
+if [ "$1" != "sync" ] && [ "$1" != "copy" ]&& [ "$1" != "check" ]; then
     echo "Invalid mode"
-    echo "Usage: cosbu.sh <sync|check>"
-    echo "  sync - Syncronize target bucket with source bucket (also checks)"
+    echo "Usage: cosbu.sh <copy|sync|check>"
+    echo "  copy - Copy new/changed files only from source to target. Does not delete from target."
+    echo "  sync - Syncronize target bucket with source bucket. Will delete from target."
     echo "  check - Only compares target and source files/checksums"
     exit 1
 fi
@@ -78,8 +75,4 @@ if [ "$CONNECT" == 1 ]; then
     exit 1
 fi
 
-if [ "$1" == "sync" ]; then 
-    rclone --config /tmp/.rclone.conf sync COS_SOURCE:${SRC_BUCKET} COS_TARGET:${TGT_BUCKET}
-fi
-
-rclone --config /tmp/.rclone.conf check COS_SOURCE:${SRC_BUCKET} COS_TARGET:${TGT_BUCKET}
+rclone --config /tmp/.rclone.conf ${1} COS_SOURCE:${SRC_BUCKET} COS_TARGET:${TGT_BUCKET}
